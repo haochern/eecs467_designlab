@@ -1,0 +1,9 @@
+<launch>
+
+  <node type="votenet_ros.py" pkg="votenet" output="screen" name="votenet_ros">
+    <remap from="cloud" to="points2"/>
+  </node>
+
+  <node type='bbox_plot.py' pkg='votenet' output="screen" name='bbox_plot'/>
+  
+</launch>
