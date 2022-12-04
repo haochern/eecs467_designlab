@@ -13,7 +13,7 @@ import numpy as np
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import Point
 
-from votenet.msg import BoundingBox, BoundingBoxes
+from votenet.msg import BoundingBox, BBoxArray
 
 from votenet.utils.pc_util import random_sampling
 from votenet.models.ap_helper import parse_predictions
@@ -34,8 +34,7 @@ class votenet_ros():
         self.device = device
         self.eval_config_dict = eval_config_dict
 
-        self.publisher_ = rospy.Publisher('bbox', BoundingBoxes, queue_size=10)
-        self.pcd_publisher = rospy.Publisher('votenet_pcd', PointCloud2, queue_size=10)
+        self.publisher_ = rospy.Publisher('bbox', BBoxArray, queue_size=10)
         self.subscriber_ = rospy.Subscriber('cloud', PointCloud2, self.votenet_callback)
 
 
@@ -43,7 +42,7 @@ class votenet_ros():
         pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
         detections = self.votenet_evaluation(pc)
 
-        msg = BoundingBoxes()
+        msg = BBoxArray()
         for obj in detections:
             bbox = BoundingBox()
 

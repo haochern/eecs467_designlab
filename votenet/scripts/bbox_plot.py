@@ -4,7 +4,7 @@ import rospy
 from geometry_msgs.msg import Point
 
 import rviz_tools as rviz_tools
-from votenet_detection.msg import BoundingBox, BoundingBoxes
+from votenet.msg import BBoxArray
 
 THRESHOLD = 0.75
 # THRESHOLD = 0
@@ -15,7 +15,7 @@ LIFTTIME = 10
 
 class bbox:
     def __init__(self) -> None:
-        rospy.Subscriber('bbox', BoundingBoxes, self.plot_callback)
+        rospy.Subscriber('bbox', BBoxArray, self.plot_callback)
         self.markers = rviz_tools.RvizMarkers('imu_link', 'visualization_marker')
 
     def plot_callback(self, data):

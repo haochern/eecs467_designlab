@@ -51,7 +51,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   BoundingBox.msg
-  BoundingBoxes.msg
+  BBoxArray.msg
 )
 
 ## Generate services in the 'srv' folder
