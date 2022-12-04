@@ -12,7 +12,7 @@ from SG_PR.sg_net import SGTrainer
 from SG_PR.parser_sg import sgpr_args
 
 
-class sgpr_ros():
+class sgpr_ros:
     def __init__(self, trainer) -> None:
         self.trainer = trainer
 

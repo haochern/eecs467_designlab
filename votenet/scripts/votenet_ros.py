@@ -28,7 +28,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/
 NUM_POINT = 40000
 
 
-class votenet_ros():
+class votenet_ros:
     def __init__(self, net, device, eval_config_dict) -> None:
         self.net = net
         self.device = device
