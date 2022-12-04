@@ -1,6 +1,6 @@
-[submodule "sg_pr/src/SG_PR"]
-	path = sg_pr/src/SG_PR
-	url = https://github.com/kxhit/SG_PR.git
-[submodule "votenet/src/votenet"]
-	path = votenet/src/votenet
-	url = https://github.com/facebookresearch/votenet.git
+# [submodule "sg_pr/src/SG_PR"]
+# 	path = sg_pr/src/SG_PR
+# 	url = https://github.com/kxhit/SG_PR.git
+# [submodule "votenet/src/votenet"]
+# 	path = votenet/src/votenet
+# 	url = https://github.com/facebookresearch/votenet.git

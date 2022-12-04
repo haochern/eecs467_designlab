@@ -1,11 +1,7 @@
 #!/home/hao/anaconda3/envs/sgpr/bin/python
 import os
-import sys
-import numpy as np
-from matplotlib import pyplot as plt
 
 import rospy
-import ros_numpy
 
 from std_msgs.msg import Float32MultiArray
 
@@ -31,7 +27,7 @@ class sgpr_ros():
                   "nodes": graph.nodes, 
                   "pose": [0 for _ in range(12)]} for graph in msg.batch.array]
 
-        pred, gt = self.trainer.eval_package(target, batch)
+        pred, gt = self.trainer.eval_package(target, batch) #TODO: batch size 128
 
         score = Float32MultiArray()
         score.data = pred
