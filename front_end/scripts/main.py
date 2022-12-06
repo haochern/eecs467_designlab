@@ -14,9 +14,13 @@ from factor_graph import *
 
 
 THRESHOLD = 0.8
+pcd_counter = 0
+pose_counter = 0
+pcd_to_be_sent_to_votenet = {}
 
 
 class FrontEnd:
+    
     def __init__(self) -> None:
         self.sg_q = SG_queue()
         self.fg = FactorGraph()
@@ -33,13 +37,30 @@ class FrontEnd:
         pos, ori = msg.pose.position, msg.pose.orientation
         curr_camera_pose = [pos.x, pos.y, pos.z, ori.w, ori.x, ori.y, ori.z]
         self.fg.add_adjacent_vertex(curr_camera_pose)
+        
+        self.curr_camera_pose = msg.pose.position + msg.pose.orientation
+        if pose_counter % 30 == 0:
+            # find associated pcd
+            # publish to votenet (pcd + pose)
+            # delete associated pcd from array
+            pass
+
+        pose_counter += 1
 
     def pcd_callback(self, msg: PointCloud2):
         self.graph_set.append(msg.data)
         print(self.graph_set)
+
+        if pcd_counter % 30 == 0:
+            pcd_to_be_sent_to_votenet.append(msg)
+            pass
+
+        # send to orbslam
+        pcd_counter += 1
         pass
 
-    def bboxes_callback(self, msg: Float32MultiArray):
+    def bboxes_callback(self, msg: BBoxArray):
+
         pass
 
     def eval_callback(self, msg: Float32MultiArray):
