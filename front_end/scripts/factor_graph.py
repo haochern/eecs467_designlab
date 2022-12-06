@@ -1,5 +1,5 @@
-
 from utils import *
+import transformation
 
 
 class FactorGraph:
@@ -7,12 +7,18 @@ class FactorGraph:
         self.vertexes = []
         self.edges = []
 
-    def add_vertex(self, index, vertex):
-        self.edges.append(adjacent_edge(self.vertexes[index], vertex))
-        self.vertexes.append(vertex)
+    def add_adjacent_vertex(self, vtx):
+        if len(self.vertexes) == 0:
+            self.vertexes.append(vtx)
+            return self.vertexes[-1], None
+        pair = self.vertexes.size + [-1, 0]
+        self.edges.append(np.r_[pair, pair_to_edge(self.vertexes[-1], vtx)])
+        self.vertexes.append(vtx)
+        return self.vertexes[-1], self.edges[-1]
 
-    def add_adjacent_vertex(self, vertex):
-        self.add_vertex(-1, vertex)
+    def add_edge(self, idx1, idx2, homo):
+        self.edges.append(np.r_[[idx1, idx2], matrix_to_tf(homo)])
+        return self.edges[-1]
 
     def save_graph(self):
         pass
