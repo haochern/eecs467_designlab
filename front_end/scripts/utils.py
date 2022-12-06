@@ -7,9 +7,13 @@ def overlap(bbox1, bbox2):
     '''
     Given two bounding box object, find the estimated overlap percentage
     '''
-    IOUU= iou.IoU(bbox1,bbox2)
-    return IOUU.iou()
-    
+    bbox1R=bbox1.radius()
+    bbox2R=bbox2.radius()
+    d = np.linag.norm(bbox2.center()-bbox1.center())
+    if (d > (bbox1R+bbox2R)):
+        return 0
+    # formula from https://archive.lib.msu.edu/crcmath/math/math/s/s563.htm
+    return math.pi*(bbox1R+bbox2R-d)**3 * (d**2+2*d*bbox1R+2*d*bbox2R+6*bbox1R*bbox2R-3*bbox1R**2-3*bbox2R**2)/12/d
 
 def adjacent_edge(prior, posterior):
     return posterior @ np.linalg.inv(prior)
