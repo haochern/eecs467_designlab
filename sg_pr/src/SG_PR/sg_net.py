@@ -298,15 +298,15 @@ class SGTrainer(object):
         new_data["features_1"] = np.squeeze(xyz_feature_1)
         new_data["features_2"] = np.squeeze(xyz_feature_2)
 
-
-        if data["distance"] <= self.args.p_thresh:  # TODO
-            new_data["target"] = 1.0
-        elif data["distance"] >= 20:
-            new_data["target"] = 0.0
-        else:
-            new_data["target"] = -100.0
-            print("distance error: ", data["distance"])
-            exit(-1)
+        new_data["target"] = data["similarity"]
+        # if data["distance"] <= self.args.p_thresh:  # TODO
+        #     new_data["target"] = 1.0
+        # elif data["distance"] >= 20:
+        #     new_data["target"] = 0.0
+        # else:
+        #     new_data["target"] = -100.0
+        #     print("distance error: ", data["distance"])
+        #     exit(-1)
         return new_data
 
     def process_batch(self, batch, training=True):
