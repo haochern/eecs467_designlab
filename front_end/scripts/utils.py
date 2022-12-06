@@ -1,9 +1,12 @@
 import math
+import iou
 import numpy as np
 import transformation
 
 def overlap(bbox1, bbox2):
-    pass
+    IOUU= IoU(bbox1,bbox2)
+    return IOUU.iou()
+    
 
 def adjacent_edge(prior, posterior):
     return posterior @ np.linalg.inv(prior)
