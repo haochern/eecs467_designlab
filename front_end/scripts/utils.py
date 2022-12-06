@@ -5,6 +5,9 @@ import transformation
 def overlap(bbox1, bbox2):
     pass
 
+def adjacent_edge(prior, posterior):
+    return posterior @ np.linalg.inv(prior)
+
 def transform_pcd(pcd, pose):
     '''
     pcd: an array of points representing a point cloud in camera's frame
