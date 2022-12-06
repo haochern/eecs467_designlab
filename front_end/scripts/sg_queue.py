@@ -1,5 +1,6 @@
 import math
 import numpy
+import utils
 
 from utils import *
 
@@ -27,11 +28,14 @@ class SG_queue:
             item = new_queue.pop(0)
             for existing_item in self.sg_q:
                 if (item.label == existing_item.label):
-                    if (overlap(item, existing_item) > 0.8):
+                    if (utils.overlap(item, existing_item) < 0.8):
                         self.sg_q.append(item)
         pass
 
     def update(curr_pose):
-        
+        i = len(sg_q)
+        while (i > 0):
+            if (utils.distance(curr_pose.position, sg_q[i].center()) > SPATIAL_DIS):
+                sq_q.pop(i)
 
         pass
