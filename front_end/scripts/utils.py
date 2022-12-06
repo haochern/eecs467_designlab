@@ -7,10 +7,7 @@ def overlap(bbox1, bbox2):
     '''
     Given two bounding box object, find the estimated overlap percentage
     '''
-
-
-
-    IOUU= IoU(bbox1,bbox2)
+    IOUU= iou.IoU(bbox1,bbox2)
     return IOUU.iou()
     
 
