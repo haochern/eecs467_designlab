@@ -9,6 +9,7 @@ def overlap(bbox1, bbox2):
     '''
     bbox1R=bbox1.radius()
     bbox2R=bbox2.radius()
+    # TODO: center needs to be transformed into correct frames.
     d = np.linag.norm(bbox2.center()-bbox1.center())
     if (d > (bbox1R+bbox2R)):
         return 0
@@ -63,5 +64,4 @@ def distance(point1, point2):
     '''
     point1, point2: array of size 3 points representing a point [x,y,z]
     '''
-    # return math.sqrt( (point1[0] - point2[0])**2 + (point1[1] - point2[1])**2 + (point1[2] - point2[2])**2 )
     return np.linalg.norm(point1 - point2)
