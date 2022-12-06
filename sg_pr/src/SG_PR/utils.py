@@ -31,10 +31,16 @@ def process_pair(path):
     data["nodes_1"]=data1["nodes"]
     data["centers_2"]=data2["centers"]
     data["nodes_2"]=data2["nodes"]
-    pose1=data1["pose"]
-    pose2=data2["pose"]
-    dis=math.sqrt((pose1[3]-pose2[3])**2+(pose1[11]-pose2[11])**2)
-    data["distance"]=dis
+    # pose1=data1["pose"]
+    # pose2=data2["pose"]
+    # dis=math.sqrt((pose1[3]-pose2[3])**2+(pose1[11]-pose2[11])**2)
+    # data["distance"]=dis
+    scene1 = data1["scene"]
+    scene2 = data2["scene"]
+    if scene1 == scene2:
+      data["similarity"] = 1
+    else:
+      data["similarity"] = 0
     return data
 
 def setup_pair(data1, data2):
