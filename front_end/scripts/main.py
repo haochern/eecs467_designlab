@@ -12,7 +12,7 @@ from votenet.msg import BoundingBox, BBoxArray
 THRESHOLD = 0.8
 
 
-class frontend:
+class FrontEnd:
     def __init__(self) -> None:
         self.graph_set = []
         self.curr_camera_pose = np.zeros(7)

@@ -28,7 +28,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/
 NUM_POINT = 40000
 
 
-class votenet_ros:
+class VoteNet_ros:
     def __init__(self, net, device, eval_config_dict) -> None:
         self.net = net
         self.device = device
@@ -113,7 +113,7 @@ def main():
     print("Loaded checkpoint %s (epoch: %d)"%(checkpoint_path, epoch))
     net.eval() # set model to eval mode (for bn and dp)
 
-    votenet = votenet_ros(net, device, eval_config_dict)
+    votenet = VoteNet_ros(net, device, eval_config_dict)
     rospy.spin()
 
 

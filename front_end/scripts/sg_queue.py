@@ -1,6 +1,8 @@
 import math
 import numpy
 
+from utils import *
+
 MIN_OBJS = 10
 SPATIAL_DIS = 5
 
@@ -10,8 +12,8 @@ class BoundingBox:
         self.tag = tag
         pass
 
-    def center():
-        return [(corners[0][0] + corners[6][0])/2, (corners[0][1] + corners[6][1])/2, (corners[0][2] + corners[6][2])/2] 
+    def center(self):
+        return [(self.corners[0][0] + self.corners[6][0])/2, (corners[0][1] + self.corners[6][1])/2, (self.corners[0][2] + self.corners[6][2])/2] 
         
 
 class SG_queue:
@@ -20,13 +22,13 @@ class SG_queue:
 
         pass
 
-    def insert(new_queue):
+    def insert(self, new_queue):
         while (len(new_queue) != 0):
             item = new_queue.pop(0)
-            for existing_item in sg_q:
+            for existing_item in self.sg_q:
                 if (item.label == existing_item.label):
                     if (overlap(item, existing_item) > 0.8):
-                        sg_q.append(item)
+                        self.sg_q.append(item)
         pass
 
     def update(curr_pose):

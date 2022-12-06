@@ -12,7 +12,7 @@ from SG_PR.sg_net import SGTrainer
 from SG_PR.parser_sg import sgpr_args
 
 
-class sgpr_ros:
+class SGPR_ros:
     def __init__(self, trainer) -> None:
         self.trainer = trainer
 
@@ -44,7 +44,7 @@ def main():
     trainer = SGTrainer(args, False)
     trainer.model.eval()
 
-    sgpr = sgpr_ros(trainer)
+    sgpr = SGPR_ros(trainer)
     
     rospy.spin()
 
