@@ -32,10 +32,10 @@ class SG_queue:
                         self.sg_q.append(item)
         pass
 
-    def update(curr_pose):
-        i = len(sg_q)
+    def update(self, curr_pose):
+        i = len(self.sg_q)
         while (i > 0):
-            if (utils.distance(curr_pose.position, sg_q[i].center()) > SPATIAL_DIS):
-                sq_q.pop(i)
+            if (utils.distance(curr_pose.position, self.sg_q[i].center()) > SPATIAL_DIS):
+                self.sq_q.pop(i)
 
         pass
