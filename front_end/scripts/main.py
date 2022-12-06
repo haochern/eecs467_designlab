@@ -9,10 +9,16 @@ from sensor_msgs.msg import PointCloud2
 
 from votenet.msg import BoundingBox, BBoxArray
 
+from sg_queue import SG_queue
+
 THRESHOLD = 0.8
+pcd_counter = 0
+pose_counter = 0
+pcd_to_be_sent_to_votenet = {}
 
 
 class FrontEnd:
+    
     def __init__(self) -> None:
         self.graph_set = []
         self.curr_camera_pose = np.zeros(7)
@@ -25,13 +31,28 @@ class FrontEnd:
 
     def pose_callback(self, msg: PoseStamped):
         self.curr_camera_pose = msg.pose.position + msg.pose.orientation
+        if pose_counter % 30 == 0:
+            # find associated pcd
+            # publish to votenet (pcd + pose)
+            # delete associated pcd from array
+            pass
+
+        pose_counter += 1
 
     def pcd_callback(self, msg: PointCloud2):
         self.graph_set.append(msg.data)
         print(self.graph_set)
+
+        if pcd_counter % 30 == 0:
+            pcd_to_be_sent_to_votenet.append(msg)
+            pass
+
+        # send to orbslam
+        pcd_counter += 1
         pass
 
-    def bboxes_callback(self, msg: Float32MultiArray):
+    def bboxes_callback(self, msg: BBoxArray):
+
         pass
 
     def eval_callback(self, msg: Float32MultiArray):
@@ -40,7 +61,7 @@ class FrontEnd:
 def main():
     rospy.init_node("Front-End")
 
-    f = frontend()
+    f = FrontEnd()
 
     rospy.spin()
 

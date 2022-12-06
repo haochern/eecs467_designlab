@@ -3,7 +3,7 @@ import numpy as np
 import utils
 
 class BoundingBox:
-    def __init__(self, corners, tag) -> None:
+    def __init__(self, corners, tag, pose) -> None:
         self.corners = corners
         self.tag = tag
         self._vertices = None
@@ -12,6 +12,7 @@ class BoundingBox:
         self._scale = None
         self._transformation = None
         self._volume = None
+        self.associated_pose = pose
         pass
 
     def from_transformation(cls, rotation, translation, scale):
@@ -238,3 +239,6 @@ class BoundingBox:
     def center(self):
         return [(self.corners[0][0] + self.corners[6][0])/2, (self.corners[0][1] + self.corners[6][1])/2, (self.corners[0][2] + self.corners[6][2])/2] 
         
+    def cornersInGlobalFrame(self):
+        new_box = utils.transform_bbox(self, self.associated_pose)
+        return new_box.corners
