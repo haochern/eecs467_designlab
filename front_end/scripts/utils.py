@@ -89,3 +89,9 @@ def random_sampling(pc, num_sample, replace=None, return_choices=False):
         return pc[choices], choices
     else:
         return pc[choices]
+
+def ransac(target, current):
+    # item.position --> [x,y,z]
+    # item.label --> tag
+    # target:= item[N],  current:= item[M]
+    pass

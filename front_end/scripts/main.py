@@ -18,6 +18,7 @@ from BoundingBox import *
 
 THRESHOLD = 0.8
 DELAY = 30
+NUM_POINT = 8000
 
 class FrontEnd:
     
@@ -45,9 +46,7 @@ class FrontEnd:
             curr_camera_pose = [pos.x, pos.y, pos.z, ori.w, ori.x, ori.y, ori.z]
             self.fg.add_adjacent_vertex(curr_camera_pose)
             
-            numSample= 9000
-            # TODO: down sampling
-            downSampled_pcd = random_sampling(pcd,numSample)  
+            downSampled_pcd = random_sampling(pcd,NUM_POINT)  
             pcd = transform_pcd(downSampled_pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
             # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
             pcd_msg = ros_numpy.point_cloud2.xyz_array_to_pointcloud2(pcd, msg.header.stamp, 'map')
@@ -70,7 +69,12 @@ class FrontEnd:
         SG_queue.update(curr_pose=None) # TODO: get a current pose
 
     def eval_callback(self, msg: Float32MultiArray):
-
+        score = msg.data
+        idx = np.argmax(score)
+        best_score = score[idx]
+        if best_score > THRESHOLD:
+            # closure check
+            pass
         pass
 
 def main():
