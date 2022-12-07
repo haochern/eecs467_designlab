@@ -26,20 +26,20 @@ def pair_to_edge(prior, posterior):
     tf = homo_pos @ np.linalg.inv(homo_pri)
     return matrix_to_tf(tf)
 
-def translate_point(point, pose):
-    camera_transform = transformation.quaternion_matrix(pose.position)
+def translate_point(point, position):
+    camera_transform = transformation.quaternion_matrix(position)
     point_transform = transformation.translation_matrix(point)
     transformed_point_matrix = np.matmul(camera_transform, point_transform)
     new_point = [transformed_point_matrix[0][3], transformed_point_matrix[1][3], transformed_point_matrix[2][3]]
     return new_point
 
-def transform_pcd(pcd, pose):
+def transform_pcd(pcd, orientation):
     '''
     pcd: an array of points representing a point cloud in camera's frame [n x 3]
     pose: the camera's position and orientation in global frame
     return the pcd with the orientation transformed into the camera's frame (not the position)
     '''
-    camera_transform = transformation.quaternion_matrix(pose.orientation)
+    camera_transform = transformation.quaternion_matrix(orientation)
     new_pcd = []
     for point in pcd:
         point_transform = transformation.translation_matrix(point)
