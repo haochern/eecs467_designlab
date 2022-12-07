@@ -10,6 +10,8 @@ from sensor_msgs.msg import PointCloud2
 
 from votenet.msg import BoundingBox, BBoxArray
 
+from util import *
+
 from sg_queue import *
 from factor_graph import *
 from BoundingBox import *
@@ -43,8 +45,11 @@ class FrontEnd:
             curr_camera_pose = [pos.x, pos.y, pos.z, ori.w, ori.x, ori.y, ori.z]
             self.fg.add_adjacent_vertex(curr_camera_pose)
             
+            numSample= 9000
             # TODO: down sampling
-            pcd = transform_pcd(pcd, curr_camera_pose[3:7])
+            downSampled_pcd = random_sampling(pcd,numSample)  
+            pcd = transform_pcd(downSampled_pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
+            # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
             pcd_msg = ros_numpy.point_cloud2.xyz_array_to_pointcloud2(pcd, msg.header.stamp, 'map')
             self.publisher_pcd.publish(pcd_msg) # to votenet
 

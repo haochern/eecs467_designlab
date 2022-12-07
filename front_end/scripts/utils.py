@@ -13,7 +13,12 @@ def overlap(bbox1, bbox2):
     if (d > (bbox1R+bbox2R)):
         return 0
     # formula from https://archive.lib.msu.edu/crcmath/math/math/s/s563.htm
-    return math.pi*(bbox1R+bbox2R-d)**3 * (d**2+2*d*bbox1R+2*d*bbox2R+6*bbox1R*bbox2R-3*bbox1R**2-3*bbox2R**2)/12/d
+    overlap_V= math.pi*(bbox1R+bbox2R-d)**2 * (d**2+2*d*bbox1R+2*d*bbox2R+6*bbox1R*bbox2R-3*bbox1R**2-3*bbox2R**2)/12/d
+    voluebbox1= bbox1.volume()
+    voluebbox2= bbox2.volume()
+    iou= overlap_V/(voluebbox1+voluebbox2-overlap)
+    return iou
+
 
 def matrix_to_tf(matrix):
     return np.r_[matrix[3, :3] + transformation.quaternion_from_matrix(matrix[:3, :3])]
@@ -71,3 +76,16 @@ def distance(point1, point2):
     point1, point2: array of size 3 points representing a point [x,y,z]
     '''
     return np.linalg.norm(point1 - point2)
+
+def random_sampling(pc, num_sample, replace=None, return_choices=False):
+    """ Input is NxC, output is num_samplexC
+    """
+    '''
+    Copy from pc_util,py sampling pcd point cloud
+    '''
+    if replace is None: replace = (pc.shape[0]<num_sample)
+    choices = np.random.choice(pc.shape[0], num_sample, replace=replace)
+    if return_choices:
+        return pc[choices], choices
+    else:
+        return pc[choices]
