@@ -9,8 +9,7 @@ def overlap(bbox1, bbox2):
     '''
     bbox1R=bbox1.radius()
     bbox2R=bbox2.radius()
-    # TODO: center needs to be transformed into correct frames.
-    d = np.linag.norm(bbox2.center()-bbox1.center())
+    d = np.linag.norm(bbox2.global_center()-bbox1.global_center())
     if (d > (bbox1R+bbox2R)):
         return 0
     # formula from https://archive.lib.msu.edu/crcmath/math/math/s/s563.htm
@@ -26,6 +25,13 @@ def pair_to_edge(prior, posterior):
     homo_pos = np.r_[np.c_[rot_pos, posterior[0:3]], [[0, 0, 0, 1]]]
     tf = homo_pos @ np.linalg.inv(homo_pri)
     return matrix_to_tf(tf)
+
+def translate_point(point, pose):
+    camera_transform = transformation.quaternion_matrix(pose.position)
+    point_transform = transformation.translation_matrix(point)
+    transformed_point_matrix = np.matmul(camera_transform, point_transform)
+    new_point = [transformed_point_matrix[0][3], transformed_point_matrix[1][3], transformed_point_matrix[2][3]]
+    return new_point
 
 def transform_pcd(pcd, pose):
     '''

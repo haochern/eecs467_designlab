@@ -11,7 +11,7 @@ from votenet.msg import BoundingBox, BBoxArray
 
 from sg_queue import *
 from factor_graph import *
-
+from BoundingBox import *
 
 THRESHOLD = 0.8
 pcd_counter = 0
@@ -59,11 +59,19 @@ class FrontEnd:
         pcd_counter += 1
         pass
 
-    def bboxes_callback(self, msg: BBoxArray):
-
-        pass
+    def bboxes_callback(self, msg: BBoxArray): 
+        actual_bbox = []
+        for bbox in msg:
+            corners = []
+            for p in msg.bbox_corners:
+                corners.append([p.x, p.y, p.z])
+            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=None)) # TODO: add associated pose
+        
+        SG_queue.insert(new_queue=actual_bbox)
+        SG_queue.update(curr_pose=None) # TODO: get a current pose
 
     def eval_callback(self, msg: Float32MultiArray):
+
         pass
 
 def main():
