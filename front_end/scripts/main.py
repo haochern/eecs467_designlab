@@ -10,7 +10,7 @@ from sensor_msgs.msg import PointCloud2
 
 from sg_pr.msg import EvalPackage
 
-from votenet.msg import BoundingBox, BBoxArray, Point, PointCloud
+from votenet.msg import BoundingBox, BBoxArray, PointCloud
 
 from utils import *
 
@@ -38,7 +38,7 @@ class FrontEnd:
         self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
         self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', Float32MultiArray, self.eval_callback)
-        self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud2, queue_size=10)
+        self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud, queue_size=10)
         self.publisher_pr = rospy.Publisher('sg', EvalPackage, queue_size=10)
 
 
@@ -47,6 +47,7 @@ class FrontEnd:
     def pose_callback(self, msg: PoseStamped):
         self.receipt += 1
         if self.receipt % DELAY == 0:
+            print("Point Cloud(ID: ", self.receipt, ") pop")
             pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(self.pending.pop(self.receipt, None), remove_nans=True)
 
             # build up the factor graph
@@ -60,19 +61,20 @@ class FrontEnd:
             downSampled_pcd = random_sampling(pcd,NUM_POINT)  
             pcd = transform_pcd(downSampled_pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
             # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
-            pcd_msg = PointCloud(receipt = self.receipt, points = [Point(position = p) for p in pcd])
+            pcd_msg = PointCloud(receipt = self.receipt, points = [Float32MultiArray(data=p) for p in pcd])
             self.publisher_pcd.publish(pcd_msg) # to votenet
 
 
-    def pcd_callback(self, msg: PointCloud2):        
+    def pcd_callback(self, msg: PointCloud2):  
         self.timestamp += 1
+        # print(self.timestamp)
         if self.timestamp % DELAY == 0:
             self.pending[self.timestamp] = msg
-            print("Point Cloud pushed")
+            print("Point Cloud(ID: ", self.timestamp, ") pushed")
 
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
-        associated_pose = msg.poseStamped.pose
+        # associated_pose = msg.poseStamped.pose
         for bbox in msg:
             corners = []
             for p in msg.bbox_corners:
@@ -102,7 +104,7 @@ class FrontEnd:
         pass
 
 def main():
-    rospy.init_node("Front-End")
+    rospy.init_node("front-end")
 
     f = FrontEnd()
 

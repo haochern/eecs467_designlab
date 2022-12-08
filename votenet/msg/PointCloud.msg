@@ -1,2 +1,2 @@
 int32 receipt
-Point[] points
+std_msgs/Float32MultiArray[] points

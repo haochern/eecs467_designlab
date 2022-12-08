@@ -42,7 +42,7 @@ class VoteNet_ros:
 
         # pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
         receipt = msg.receipt
-        pc = [p.position for p in msg.points]
+        pc = np.array([p.data for p in msg.points])
         
         detections = self.votenet_evaluation(pc)
 
