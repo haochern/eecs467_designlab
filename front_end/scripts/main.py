@@ -8,6 +8,8 @@ from std_msgs.msg import Int32, Float32MultiArray
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import PointCloud2
 
+from sg_pr.msg import EvalPackage
+
 from votenet.msg import BoundingBox, BBoxArray
 
 from util import *
@@ -25,6 +27,7 @@ class FrontEnd:
     def __init__(self) -> None:
         self.sg_q = SG_queue()
         self.fg = FactorGraph()
+        self.all_graphs = []
 
         self.timestamp = 0
         self.receipt = 0
@@ -36,6 +39,8 @@ class FrontEnd:
         self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', Float32MultiArray, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud2, queue_size=10)
+        
+        self.last_published_pose = None
 
     def pose_callback(self, msg: PoseStamped):
         self.receipt += 1
@@ -52,6 +57,14 @@ class FrontEnd:
             pcd_msg = ros_numpy.point_cloud2.xyz_array_to_pointcloud2(pcd, msg.header.stamp, 'map')
             self.publisher_pcd.publish(pcd_msg) # to votenet
 
+            # to SG_PR
+        if self.last_published_pose == None or utils.distance(self.last_published_pose, [msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]) > 3:
+            self.sg_q.update(curr_pose=[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z])
+            targetGraph = self.sg_q.getGraph() 
+            evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
+            # publish
+
+
     def pcd_callback(self, msg: PointCloud2):        
         self.timestamp += 1
         if self.timestamp % DELAY == 0:
@@ -65,8 +78,9 @@ class FrontEnd:
                 corners.append([p.x, p.y, p.z])
             actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=None)) # TODO: add associated pose
         
-        SG_queue.insert(new_queue=actual_bbox)
-        SG_queue.update(curr_pose=None) # TODO: get a current pose
+        self.sg_q.insert(new_queue=actual_bbox)
+
+
 
     def eval_callback(self, msg: Float32MultiArray):
         score = msg.data
