@@ -60,7 +60,7 @@ class FrontEnd:
             downSampled_pcd = random_sampling(pcd,NUM_POINT)  
             pcd = transform_pcd(downSampled_pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
             # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
-            pcd_msg = PointCloud(timestamp = self.receipt, points = [Point(position = p) for p in pcd])
+            pcd_msg = PointCloud(receipt = self.receipt, points = [Point(position = p) for p in pcd])
             self.publisher_pcd.publish(pcd_msg) # to votenet
 
 

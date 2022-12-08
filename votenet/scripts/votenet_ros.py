@@ -41,12 +41,12 @@ class VoteNet_ros:
     def votenet_callback(self, msg: PointCloud):
 
         # pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
-        
+        receipt = msg.receipt
         pc = [p.position for p in msg.points]
         
         detections = self.votenet_evaluation(pc)
 
-        msg = BBoxArray()
+        msg = BBoxArray(receipt=receipt)
         for obj in detections:
             bbox = BoundingBox()
 

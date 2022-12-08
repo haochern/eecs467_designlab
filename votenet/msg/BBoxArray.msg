@@ -1,2 +1,2 @@
+int32 receipt
 BoundingBox[] array
-geometry_msgs/PoseStamped poseStamped

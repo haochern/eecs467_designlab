@@ -1,2 +1,2 @@
-int32 timestamp
+int32 receipt
 Point[] points
