@@ -52,6 +52,8 @@ add_message_files(
   FILES
   BoundingBox.msg
   BBoxArray.msg
+  Point.msg
+  PointCloud.msg
 )
 
 ## Generate services in the 'srv' folder

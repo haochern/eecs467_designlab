@@ -11,7 +11,7 @@ class FactorGraph:
         if len(self.vertexes) == 0:
             self.vertexes.append(vtx)
             return self.vertexes[-1], None
-        pair = self.vertexes.size + [-1, 0]
+        pair = [len(self.vertexes) - 1, len(self.vertexes)]
         self.edges.append(np.r_[pair, pair_to_edge(self.vertexes[-1], vtx)])
         self.vertexes.append(vtx)
         return self.vertexes[-1], self.edges[-1]

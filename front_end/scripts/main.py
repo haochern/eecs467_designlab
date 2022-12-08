@@ -10,9 +10,9 @@ from sensor_msgs.msg import PointCloud2
 
 from sg_pr.msg import EvalPackage
 
-from votenet.msg import BoundingBox, BBoxArray
+from votenet.msg import BoundingBox, BBoxArray, Point, PointCloud
 
-from util import *
+from utils import *
 
 from sg_queue import *
 from factor_graph import *
@@ -35,7 +35,7 @@ class FrontEnd:
 
 
         self.subscriber_pose = rospy.Subscriber('orb_slam2_rgbd/pose', PoseStamped, self.pose_callback)
-        self.subscriber_pcd = rospy.Subscriber('Point2', PointCloud2, self.pcd_callback)
+        self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
         self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', Float32MultiArray, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud2, queue_size=10)
@@ -47,25 +47,28 @@ class FrontEnd:
     def pose_callback(self, msg: PoseStamped):
         self.receipt += 1
         if self.receipt % DELAY == 0:
-            pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(self.pending.pop(self.receipt, None))
+            pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(self.pending.pop(self.receipt, None), remove_nans=True)
 
+            # build up the factor graph
             pos, ori = msg.pose.position, msg.pose.orientation
             curr_camera_pose = [pos.x, pos.y, pos.z, ori.w, ori.x, ori.y, ori.z]
-            self.fg.add_adjacent_vertex(curr_camera_pose)
-            
+            vtx, edge = self.fg.add_adjacent_vertex(curr_camera_pose)
+            print("new vertex:", vtx)
+            print("new edge:", edge)
+
+            # publish to votenet for detection
             downSampled_pcd = random_sampling(pcd,NUM_POINT)  
             pcd = transform_pcd(downSampled_pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
             # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
-            pcd_msg = ros_numpy.point_cloud2.xyz_array_to_pointcloud2(pcd, msg.header.stamp, 'map')
+            pcd_msg = PointCloud(timestamp = self.receipt, points = [Point(position = p) for p in pcd])
             self.publisher_pcd.publish(pcd_msg) # to votenet
-
-       
 
 
     def pcd_callback(self, msg: PointCloud2):        
         self.timestamp += 1
         if self.timestamp % DELAY == 0:
             self.pending[self.timestamp] = msg
+            print("Point Cloud pushed")
 
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
@@ -94,6 +97,7 @@ class FrontEnd:
         best_score = score[idx]
         if best_score > THRESHOLD:
             # closure check
+            # sg_queue append
             pass
         pass
 

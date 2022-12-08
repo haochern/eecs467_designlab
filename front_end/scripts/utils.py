@@ -22,13 +22,12 @@ def overlap(bbox1, bbox2):
 
 
 def matrix_to_tf(matrix):
-    return np.r_[matrix[3, :3] + transformation.quaternion_from_matrix(matrix[:3, :3])]
+    return np.concatenate((matrix[3, :3], transformation.quaternion_from_matrix(matrix[:3, :3])))
 
 def pair_to_edge(prior, posterior):
-    rot_pri = transformation.quaternion_matrix(prior[3, 7])
-    rot_pos = transformation.quaternion_matrix(posterior[3, 7])
-    homo_pri = np.r_[np.c_[rot_pri, prior[0:3]], [[0, 0, 0, 1]]]
-    homo_pos = np.r_[np.c_[rot_pos, posterior[0:3]], [[0, 0, 0, 1]]]
+    homo_pri = transformation.quaternion_matrix(prior[3:7])
+    homo_pos = transformation.quaternion_matrix(posterior[3:7])
+    homo_pri[:3, 3], homo_pos[:3, 3] = prior[:3], posterior[:3]
     tf = homo_pos @ np.linalg.inv(homo_pri)
     return matrix_to_tf(tf)
 

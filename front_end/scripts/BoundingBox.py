@@ -14,7 +14,7 @@ class BoundingBox:
     ## These corners should be in global frame
 
     def volume(self):
-        return np.linalg.norm(self.corners[0]-corners[4])*np.linalg.norm(self.corners[0]-self.corners[1])*np.linalg.norm(self.corners[0]-self.corners[2])
+        return np.linalg.norm(self.corners[0]-self.corners[4])*np.linalg.norm(self.corners[0]-self.corners[1])*np.linalg.norm(self.corners[0]-self.corners[2])
 
     def radius(self):
         return (self.volume()/(math.pi*4/3))**(1/3)

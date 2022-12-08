@@ -42,7 +42,6 @@ class VoteNet_ros:
 
         # pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
         
-        pc = PointCloud.
         
         detections = self.votenet_evaluation(pc)
 
