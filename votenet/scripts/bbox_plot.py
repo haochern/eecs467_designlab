@@ -6,7 +6,7 @@ from geometry_msgs.msg import Point
 import rviz_tools as rviz_tools
 from votenet.msg import BBoxArray
 
-THRESHOLD = 0.90
+THRESHOLD = 0.7
 # THRESHOLD = 0
 
 # config for the bounded box

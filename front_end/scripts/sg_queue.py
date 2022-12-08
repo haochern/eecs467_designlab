@@ -24,10 +24,11 @@ class SG_queue:
         pass
 
     def update(self, curr_pose):
-        i = len(self.sg_q)
+        i = len(self.sg_q) - 1
         while (i >= 0):
-            if (distance(curr_pose.position, self.sg_q[i].associated_pose.position) > SPATIAL_DIS):
+            if (distance(curr_pose, self.sg_q[i].associated_pose[0:3]) > SPATIAL_DIS):
                 self.sq_q.pop(i)
+            i -= 1
 
         pass
 
