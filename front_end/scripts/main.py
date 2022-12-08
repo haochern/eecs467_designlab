@@ -72,19 +72,19 @@ class FrontEnd:
 
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
-        # associated_pose = 
+        associated_pose = msg.poseStamped.pose
         for bbox in msg:
             corners = []
             for p in msg.bbox_corners:
                 corners.append([p.x, p.y, p.z])
-            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=None)) # TODO: add associated pose
+            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=associated_pose))
         
         self.sg_q.insert(new_queue=actual_bbox)
 
 
         # to SG_PR
-        if self.last_published_pose == None or utils.distance(self.last_published_pose, [msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]) > 3:
-            self.sg_q.update(curr_pose=[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z])
+        if self.last_published_pose == None or utils.distance(self.last_published_pose, utils.getVectorForm(associated_pose.position)) > 3:
+            self.sg_q.update(curr_pose=utils.getVectorForm(associated_pose.position))
             targetGraph = self.sg_q.getGraph() 
             evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
             self.publisher_pr(evalPackage)

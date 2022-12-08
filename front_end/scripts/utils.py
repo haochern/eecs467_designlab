@@ -31,6 +31,9 @@ def pair_to_edge(prior, posterior):
     tf = homo_pos @ np.linalg.inv(homo_pri)
     return matrix_to_tf(tf)
 
+def getVectorForm(point):
+    return [point[0], point[1], point[2]]
+
 def translate_point(point, position):
     camera_transform = transformation.quaternion_matrix(position)
     point_transform = transformation.translation_matrix(point)
