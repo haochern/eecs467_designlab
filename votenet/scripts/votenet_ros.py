@@ -13,7 +13,7 @@ import numpy as np
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import Point
 
-from votenet.msg import BoundingBox, BBoxArray
+from votenet.msg import BoundingBox, BBoxArray, PointCloud
 
 from votenet.utils.pc_util import random_sampling
 from votenet.models.ap_helper import parse_predictions
@@ -25,7 +25,7 @@ from votenet.models.ap_helper import flip_axis_to_depth
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'src/votenet'))
 
-NUM_POINT = 40000
+# NUM_POINT = 40000
 
 
 class VoteNet_ros:
@@ -35,11 +35,15 @@ class VoteNet_ros:
         self.eval_config_dict = eval_config_dict
 
         self.publisher_ = rospy.Publisher('bbox', BBoxArray, queue_size=10)
-        self.subscriber_ = rospy.Subscriber('cloud', PointCloud2, self.votenet_callback)
+        self.subscriber_ = rospy.Subscriber('cloud', PointCloud, self.votenet_callback)
 
 
-    def votenet_callback(self, msg: PointCloud2):
-        pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
+    def votenet_callback(self, msg: PointCloud):
+
+        # pc = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg)
+        
+        pc = PointCloud.
+        
         detections = self.votenet_evaluation(pc)
 
         msg = BBoxArray()
@@ -59,7 +63,7 @@ class VoteNet_ros:
         floor_height = np.percentile(point_cloud[:,2],0.99)
         height = point_cloud[:,2] - floor_height
         point_cloud = np.concatenate([point_cloud, np.expand_dims(height, 1)],1) # (N,4) or (N,7)
-        point_cloud = random_sampling(point_cloud, NUM_POINT)
+        # point_cloud = random_sampling(point_cloud, NUM_POINT)
         pc = np.expand_dims(point_cloud.astype(np.float32), 0) # (1,40000,4)
         return pc
 

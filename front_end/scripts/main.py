@@ -39,7 +39,9 @@ class FrontEnd:
         self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', Float32MultiArray, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud2, queue_size=10)
-        
+        self.publisher_pr = rospy.Publisher('sg', EvalPackage, queue_size=10)
+
+
         self.last_published_pose = None
 
     def pose_callback(self, msg: PoseStamped):
@@ -82,6 +84,7 @@ class FrontEnd:
             self.sg_q.update(curr_pose=[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z])
             targetGraph = self.sg_q.getGraph() 
             evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
+            self.publisher_pr(evalPackage)
             # publish
 
 
