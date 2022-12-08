@@ -1,6 +1,7 @@
 import math
 import numpy as np
-
+from geometry_msgs.msg import Point
+from sg_pr.msg import SemanticGraph
 from utils import *
 
 MIN_OBJS = 10
@@ -29,3 +30,16 @@ class SG_queue:
                 self.sq_q.pop(i)
 
         pass
+
+    def getGraph(self):
+        centers = []
+        labels = []
+        for bbox in self.sg_q:
+            c = bbox.local_center()
+            p = Point(x = c[0], y = c[1], z = c[2])
+            centers.append(p)
+            labels.append(bbox.tag)
+        
+        semanticGraph = SemanticGraph(centers = centers, nodes = labels)
+
+        return semanticGraph
