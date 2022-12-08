@@ -216,9 +216,5 @@ def ransac(target, current):
             best_inliers = inliers
             best_R = R
             best_t = t
-  #############################################################################
-  #                             END OF YOUR CODE                              #
-  #############################################################################
-  # return best_inliers, best_model
     return best_R, best_t
     pass
