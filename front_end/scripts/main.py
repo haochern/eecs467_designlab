@@ -57,12 +57,7 @@ class FrontEnd:
             pcd_msg = ros_numpy.point_cloud2.xyz_array_to_pointcloud2(pcd, msg.header.stamp, 'map')
             self.publisher_pcd.publish(pcd_msg) # to votenet
 
-            # to SG_PR
-        if self.last_published_pose == None or utils.distance(self.last_published_pose, [msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]) > 3:
-            self.sg_q.update(curr_pose=[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z])
-            targetGraph = self.sg_q.getGraph() 
-            evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
-            # publish
+       
 
 
     def pcd_callback(self, msg: PointCloud2):        
@@ -72,6 +67,7 @@ class FrontEnd:
 
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
+        # associated_pose = 
         for bbox in msg:
             corners = []
             for p in msg.bbox_corners:
@@ -80,6 +76,13 @@ class FrontEnd:
         
         self.sg_q.insert(new_queue=actual_bbox)
 
+
+        # to SG_PR
+        if self.last_published_pose == None or utils.distance(self.last_published_pose, [msg.pose.position.x,msg.pose.position.y,msg.pose.position.z]) > 3:
+            self.sg_q.update(curr_pose=[msg.pose.position.x,msg.pose.position.y,msg.pose.position.z])
+            targetGraph = self.sg_q.getGraph() 
+            evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
+            # publish
 
 
     def eval_callback(self, msg: Float32MultiArray):
