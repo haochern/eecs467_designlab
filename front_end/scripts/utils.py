@@ -1,5 +1,4 @@
 import math
-import iou
 import numpy as np
 import random
 import transformation
@@ -47,8 +46,9 @@ def transform_pcd(pcd, orientation):
     pose: the camera's position and orientation in global frame
     return the pcd with the orientation transformed into the camera's frame (not the position)
     '''
-    camera_transform = transformation.inverse_matrix(transformation.quaternion_matrix(orientation))
-    return (camera_transform @ pcd.T).T
+    camera_transform = transformation.euler_matrix(0, 0, -math.pi/2) @ transformation.euler_matrix(-math.pi/2, 0, 0)
+    camera_transform = transformation.inverse_matrix(camera_transform)
+    return (camera_transform @ np.c_[pcd, np.ones((pcd.shape[0], 1))].T)[0:3, :].T
     
     # new_pcd = []
     # for point in pcd:

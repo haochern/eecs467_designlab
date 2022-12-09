@@ -43,7 +43,7 @@ class FrontEnd:
 
         self.subscriber_pose = rospy.Subscriber('orb_slam2_rgbd/pose', PoseStamped, self.pose_callback)
         self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
-        self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
+        # self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', EvalScore, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud, queue_size=10)
         self.publisher_pr = rospy.Publisher('sg', EvalPackage, queue_size=10)
@@ -52,9 +52,8 @@ class FrontEnd:
         self.last_published_pose = None
 
     def pose_callback(self, msg: PoseStamped):
-
+        self.receipt += 1
         if self.receipt % DELAY == 0:
-            
             if len(self.pendingPcd) > 0:
                 print("Point Cloud(ID: ", self.receipt, ") pop")  
                 pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(self.pendingPcd.pop(self.receipt, None), remove_nans=True)
@@ -83,8 +82,8 @@ class FrontEnd:
 
     def pcd_callback(self, msg: PointCloud2):  
         # print(self.timestamp)
+        self.timestamp += 1
         if self.timestamp % DELAY == 0:
-            self.timestamp += 1
             if len(self.pendingPose) > 0:
                 print("Pose(ID: ", self.timestamp, ") pop")  
                 pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
@@ -113,7 +112,7 @@ class FrontEnd:
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
         print("message receipt", msg.receipt)
-        associated_pose = self.fg.vertexes[(int)(msg.receipt/30)]
+        associated_pose = self.fg.vertexes[(int)(msg.receipt/DELAY)]
         for bbox in msg.array:
             corners = []
             for p in bbox.bbox_corners:
@@ -142,7 +141,7 @@ class FrontEnd:
         best_score = score[idx]
         if best_score > THRESHOLD:
             # loop closure
-            self.fg.add_edge(None, (int)(receipt/30), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
+            self.fg.add_edge(None, (int)(receipt/DELAY), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
             pass
         else:
             # sg_queue append
