@@ -44,7 +44,6 @@ catkin_python_setup()
 add_message_files(
   FILES
   SemanticGraph.msg
-  GraphArray.msg
   EvalPackage.msg
   EvalScore.msg
 )

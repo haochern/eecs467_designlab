@@ -1,11 +1,12 @@
 #!/home/hao/anaconda3/envs/sgpr/bin/python
 import os
+import sys
 
 import rospy
 
-from std_msgs.msg import Float32MultiArray
+# from std_msgs.msg import Float32MultiArray
 
-from sg_pr.msg import EvalPackage
+from sg_pr.msg import EvalPackage, EvalScore
 
 from SG_PR.utils import tab_printer
 from SG_PR.sg_net import SGTrainer
@@ -16,22 +17,23 @@ class SGPR_ros:
     def __init__(self, trainer) -> None:
         self.trainer = trainer
 
-        self.publisher_ = rospy.Publisher('score', Float32MultiArray, queue_size=10)
-        self.subscriber_ = rospy.Subscriber('eval_package', EvalPackage, self.sgpr_callback)
+        self.publisher_ = rospy.Publisher('score', EvalScore, queue_size=10)
+        self.subscriber_ = rospy.Subscriber('sg', EvalPackage, self.sgpr_callback)
 
     def sgpr_callback(self, msg: EvalPackage):
+        print("SG_PR Callback...............")
         target = {"centers": msg.target.centers, 
                   "nodes": msg.target.nodes, 
                   "pose": [0 for _ in range(12)]}
-        batch = [{"centers": graph.centers, 
+        batch = [{"centers": [[p.x, p.y, p.z]for p in graph.centers], 
                   "nodes": graph.nodes, 
-                  "pose": [0 for _ in range(12)]} for graph in msg.batch.array]
+                  "pose": [0 for _ in range(12)]} for graph in msg.batch]
 
         pred, gt = self.trainer.eval_package(target, batch) #TODO: batch size 128
 
-        score = Float32MultiArray()
-        score.data = pred
-        self.publisher_.publish(score)
+        msg = EvalScore(receipt = msg.receipt)
+        msg.score = pred
+        self.publisher_.publish(msg)
 
 
 def main():

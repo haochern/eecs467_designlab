@@ -50,7 +50,8 @@ class VoteNet_ros:
         for obj in detections:
             bbox = BoundingBox()
 
-            bbox.tag = DC.class2type[obj[0]]
+            # bbox.tag = DC.class2type[obj[0]]
+            bbox.tag = obj[0]
             bbox.score = obj[2]
             bbox.bbox_corners = [Point(coord[0], coord[1], coord[2]) for coord in flip_axis_to_depth(obj[1])]
             msg.array.append(bbox)

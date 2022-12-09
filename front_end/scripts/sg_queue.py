@@ -14,13 +14,32 @@ class SG_queue:
         pass
 
     def insert(self, new_queue):
+        print("new q size: ", len(new_queue))
+        temp = new_queue.copy()
+
+        for existing_item in self.sg_q:
+            different = True
+            for item in new_queue:
+                print("tags: ", item.tag, existing_item.tag)
+                if item.tag == existing_item.tag and overlap(item, existing_item) > 0.5:
+                    print("IOU::::::" ,overlap(item, existing_item))
+                    different = False
+            if different:
+                temp.append(existing_item)
+        
+        self.sg_q = temp
+        """
         while (len(new_queue) != 0):
             item = new_queue.pop(0)
+            
             for existing_item in self.sg_q:
-                if (item.label == existing_item.label):
-                    if (overlap(item, existing_item) < 0.8):
+                print("item.tag = ", item.tag, " existing_item.tag = ", existing_item.tag)
+                if (item.tag == existing_item.tag):
+                    if (overlap(item, existing_item) > 0.5):
                         self.sg_q.remove(existing_item)
-                        self.sg_q.append(item)
+            
+            self.sg_q.append(item)
+        """
         pass
 
     def update(self, curr_pose):
@@ -44,3 +63,6 @@ class SG_queue:
         semanticGraph = SemanticGraph(centers = centers, nodes = labels)
 
         return semanticGraph
+
+    def getSize(self):
+        return len(self.sg)

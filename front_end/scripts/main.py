@@ -27,6 +27,7 @@ NUM_POINT = 8000
 TRANSFORM_CAMERA = quaternion_from_euler(math.pi/2,-math.pi/2,0)
 
 UPDATE_DISTANCE = 1
+MIN_OBJC_COUNT = 5
 
 class FrontEnd:
     
@@ -43,7 +44,7 @@ class FrontEnd:
 
         self.subscriber_pose = rospy.Subscriber('orb_slam2_rgbd/pose', PoseStamped, self.pose_callback)
         self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
-        # self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
+        self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
         self.subscriber_score = rospy.Subscriber('score', EvalScore, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud, queue_size=10)
         self.publisher_pr = rospy.Publisher('sg', EvalPackage, queue_size=10)
@@ -112,8 +113,13 @@ class FrontEnd:
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
         print("message receipt", msg.receipt)
-        associated_pose = self.fg.vertexes[(int)(msg.receipt/DELAY)]
+        # print(len(self.fg.vertexes))
+        # print((int)(msg.receipt/DELAY))
+        associated_pose = self.fg.vertexes[(int)(msg.receipt/DELAY)-1]
+        print("length of msg array: ", len(msg.array))
         for bbox in msg.array:
+            if bbox.score < 0.9:
+                continue
             corners = []
             for p in bbox.bbox_corners:
                 corners.append([p.x, p.y, p.z])
@@ -126,17 +132,22 @@ class FrontEnd:
         # to SG_PR
         if self.last_published_pose != None:
             print("Update Distance", utils.distance(self.last_published_pose[0:3], associated_pose[0:3]))
-        if self.last_published_pose == None or utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE:
+        if self.last_published_pose == None and self.sg_q.getSize() > MIN_OBJC_COUNT:
+            self.all_graphs.append(self.sg_q.getGraph())
+            self.last_published_pose = associated_pose
+        elif self.last_published_pose != None and utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE:
             self.sg_q.update(curr_pose=getVectorForm(associated_pose[0:3]))
             targetGraph = self.sg_q.getGraph() 
-            evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
+            evalPackage = EvalPackage(receipt=msg.receipt, batch=self.all_graphs, target=targetGraph) 
             self.last_published_pose = associated_pose
             self.publisher_pr.publish(evalPackage)
             # publish
 
 
     def eval_callback(self, msg: EvalScore):
+        
         score, receipt = msg.score, msg.receipt
+        print("Eval Call Back..............score................", score)
         idx = np.argmax(score)
         best_score = score[idx]
         if best_score > THRESHOLD:
@@ -144,7 +155,8 @@ class FrontEnd:
             self.fg.add_edge(None, (int)(receipt/DELAY), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
             pass
         else:
-            # sg_queue append
+            # all graphs append
+            self.all_graphs.append(self.sg_q.getGraph())
             pass
 
 def main():

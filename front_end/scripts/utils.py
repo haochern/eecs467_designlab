@@ -9,14 +9,14 @@ def overlap(bbox1, bbox2):
     '''
     bbox1R=bbox1.radius()
     bbox2R=bbox2.radius()
-    d = np.linag.norm(bbox2.global_center()-bbox1.global_center())
+    d = np.linalg.norm(np.array(bbox2.global_center())-np.array(bbox1.global_center()))
     if (d > (bbox1R+bbox2R)):
         return 0
     # formula from https://archive.lib.msu.edu/crcmath/math/math/s/s563.htm
     overlap_V= math.pi*(bbox1R+bbox2R-d)**2 * (d**2+2*d*bbox1R+2*d*bbox2R+6*bbox1R*bbox2R-3*bbox1R**2-3*bbox2R**2)/12/d
     voluebbox1= bbox1.volume()
     voluebbox2= bbox2.volume()
-    iou= overlap_V/(voluebbox1+voluebbox2-overlap)
+    iou= overlap_V/(voluebbox1+voluebbox2-overlap_V)
     return iou
 
 
