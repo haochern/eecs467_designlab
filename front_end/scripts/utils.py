@@ -48,14 +48,17 @@ def transform_pcd(pcd, orientation):
     return the pcd with the orientation transformed into the camera's frame (not the position)
     '''
     camera_transform = transformation.inverse_matrix(transformation.quaternion_matrix(orientation))
-    new_pcd = []
-    for point in pcd:
-        point_transform = transformation.translation_matrix(point)
-        transformed_point_matrix = np.matmul(camera_transform, point_transform)
-        new_point = [transformed_point_matrix[0][3], transformed_point_matrix[1][3], transformed_point_matrix[2][3]]
-        new_pcd.append(new_point)
-
-    return new_pcd
+    return (camera_transform @ pcd.T).T
+    
+    # new_pcd = []
+    # for point in pcd:
+    #     point = np.c_[point, 1]
+    #     new_point = (camera_transform @ point)[0:3]
+    #     # point_transform = transformation.translation_matrix(point)
+    #     # transformed_point_matrix = np.matmul(camera_transform, point_transform)
+    #     # new_point = [transformed_point_matrix[0][3], transformed_point_matrix[1][3], transformed_point_matrix[2][3]]
+    #     new_pcd.append(new_point)
+    # return new_pcd
 
 def transform_bbox(bbox, pose):
     '''

@@ -46,6 +46,7 @@ add_message_files(
   SemanticGraph.msg
   GraphArray.msg
   EvalPackage.msg
+  EvalScore.msg
 )
 
 ## Generate services in the 'srv' folder

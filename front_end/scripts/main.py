@@ -8,7 +8,7 @@ from std_msgs.msg import Int32, Float32MultiArray
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import PointCloud2
 
-from sg_pr.msg import EvalPackage
+from sg_pr.msg import EvalPackage, EvalScore
 
 from votenet.msg import BoundingBox, BBoxArray, PointCloud
 
@@ -44,7 +44,7 @@ class FrontEnd:
         self.subscriber_pose = rospy.Subscriber('orb_slam2_rgbd/pose', PoseStamped, self.pose_callback)
         self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
         self.subscriber_bboxes = rospy.Subscriber('bbox', BBoxArray, self.bboxes_callback)
-        self.subscriber_score = rospy.Subscriber('score', Float32MultiArray, self.eval_callback)
+        self.subscriber_score = rospy.Subscriber('score', EvalScore, self.eval_callback)
         self.publisher_pcd = rospy.Publisher('pcd_msg', PointCloud, queue_size=10)
         self.publisher_pr = rospy.Publisher('sg', EvalPackage, queue_size=10)
 
@@ -77,7 +77,6 @@ class FrontEnd:
                 self.pendingPose[self.receipt] = msg
                 print("Pose(ID: ", self.receipt, ") pushed")
         
-        self.receipt += 1
 
             
 
@@ -85,6 +84,7 @@ class FrontEnd:
     def pcd_callback(self, msg: PointCloud2):  
         # print(self.timestamp)
         if self.timestamp % DELAY == 0:
+            self.timestamp += 1
             if len(self.pendingPose) > 0:
                 print("Pose(ID: ", self.timestamp, ") pop")  
                 pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
@@ -108,7 +108,7 @@ class FrontEnd:
                 self.pendingPcd[self.timestamp] = msg
                 print("Point Cloud(ID: ", self.timestamp, ") pushed")
         
-        self.timestamp += 1
+        
 
     def bboxes_callback(self, msg: BBoxArray): 
         actual_bbox = []
@@ -128,7 +128,7 @@ class FrontEnd:
         if self.last_published_pose != None:
             print("Update Distance", utils.distance(self.last_published_pose[0:3], associated_pose[0:3]))
         if self.last_published_pose == None or utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE:
-            self.sg_q.update(curr_pose=utils.getVectorForm(associated_pose[0:3]))
+            self.sg_q.update(curr_pose=getVectorForm(associated_pose[0:3]))
             targetGraph = self.sg_q.getGraph() 
             evalPackage = EvalPackage(batch = self.all_graphs, target = targetGraph) 
             self.last_published_pose = associated_pose
@@ -136,15 +136,17 @@ class FrontEnd:
             # publish
 
 
-    def eval_callback(self, msg: Float32MultiArray):
-        score = msg.data
+    def eval_callback(self, msg: EvalScore):
+        score, receipt = msg.score, msg.receipt
         idx = np.argmax(score)
         best_score = score[idx]
         if best_score > THRESHOLD:
-            # closure check
+            # loop closure
+            self.fg.add_edge(None, (int)(receipt/30), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
+            pass
+        else:
             # sg_queue append
             pass
-        pass
 
 def main():
     rospy.init_node("front-end")
