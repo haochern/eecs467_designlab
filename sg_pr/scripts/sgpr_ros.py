@@ -28,6 +28,8 @@ class SGPR_ros:
         batch = [{"centers": [[p.x, p.y, p.z]for p in graph.centers], 
                   "nodes": graph.nodes, 
                   "pose": [0 for _ in range(12)]} for graph in msg.batch]
+        print("target tags: ", msg.target.nodes)
+        print("batch tags: ", [graph.nodes for graph in msg.batch]) 
         with open(f'./target_{msg.receipt}.json', 'w') as fw:
             json.dump(target, fw)
         with open(f'./batch__{msg.receipt}.json', 'w') as fw:

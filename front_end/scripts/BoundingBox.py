@@ -2,12 +2,14 @@ import math
 import numpy as np
 import utils
 
+from main import FG
 
 class BoundingBox:
-    def __init__(self, corners, tag, pose) -> None:
+    def __init__(self, corners, tag, pose, receipt) -> None:
         self.corners = corners
         self.tag = tag
         self.associated_pose = pose
+        self.receipt = receipt
         pass
 
     ## These corners should be in global frame

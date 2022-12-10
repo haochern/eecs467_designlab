@@ -21,7 +21,7 @@ from BoundingBox import *
 
 from transformation import *
 
-THRESHOLD = 0.8
+THRESHOLD = 0.99
 DELAY = 30
 NUM_POINT = 8000
 
@@ -60,6 +60,7 @@ class FrontEnd:
 
     def pose_callback(self, msg: PoseStamped):
         self.receipt += 1
+        """
         if self.receipt % DELAY == 0:
             if len(self.pendingPcd) > 0:
                 print("Point Cloud(ID: ", self.receipt, ") pop")  
@@ -83,7 +84,7 @@ class FrontEnd:
                 self.pendingPose[self.receipt] = msg
                 print("Pose(ID: ", self.receipt, ") pushed")
         
-
+        """
             
 
 
@@ -92,6 +93,7 @@ class FrontEnd:
         self.timestamp += 1
         if self.timestamp % DELAY == 0:
             t0 = time.time()
+            """
             if len(self.pendingPose) > 0:
                 print("Pose(ID: ", self.timestamp, ") pop")  
                 pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
@@ -112,8 +114,28 @@ class FrontEnd:
                 pcd_msg = PointCloud(receipt = self.timestamp, points = [Float32MultiArray(data=p) for p in pcd])
                 self.publisher_pcd.publish(pcd_msg) # to votenet
             else:
-                self.pendingPcd[self.timestamp] = msg
-                print("Point Cloud(ID: ", self.timestamp, ") pushed")
+            """
+            
+                #self.pendingPcd[self.timestamp] = msg
+                #print("Point Cloud(ID: ", self.timestamp, ") pushed")
+                #print("Pose(ID: ", self.timestamp, ") pop")  
+            pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
+            # build up the factor graph
+            #poped_msg = self.pendingPose.pop(self.timestamp, None)
+            #pos, ori = poped_msg.pose.position, poped_msg.pose.orientation
+            curr_camera_pose = [0,0,0,0,0,0,0]
+            vtx, edge = self.fg.add_adjacent_vertex(curr_camera_pose)
+            print("new vertex:", vtx)
+            print("new edge:", edge)
+            print("curr camera pose: ", curr_camera_pose)
+
+            # publish to votenet for detection
+            downSampled_pcd = random_sampling(pcd,NUM_POINT)  
+            pcd = transform_pcd(downSampled_pcd, TRANSFORM_CAMERA)
+            pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # comment this line if not use down sampling
+            # pcd = transform_pcd(pcd, curr_camera_pose[3:7]) # uncomment this line if not use down sampling
+            pcd_msg = PointCloud(receipt = self.timestamp, points = [Float32MultiArray(data=p) for p in pcd])
+            self.publisher_pcd.publish(pcd_msg) # to votenet
         
             # print("-----------Time passed: ", time.time() - t0)
 
@@ -131,21 +153,21 @@ class FrontEnd:
             corners = []
             for p in bbox.bbox_corners:
                 corners.append([p.x, p.y, p.z])
-            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=associated_pose))
+            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=associated_pose, receipt=msg.receipt))
         
         self.sg_q.insert(new_queue=actual_bbox)
+        self.sg_q.update(receipt=msg.receipt)
 
         print("Current SQ_Q Size: ",len(self.sg_q.getGraph().nodes))
         print("Current All graph Size: ",len(self.all_graphs))
         # to SG_PR
         if self.last_published_pose != None:
             print("Update Distance", utils.distance(self.last_published_pose[0:3], associated_pose[0:3]))
-        if self.last_published_pose == None and self.sg_q.getSize() > MIN_OBJC_COUNT:
+        if self.last_published_pose == None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
             self.all_graphs.append(self.sg_q.getGraph())
             self.last_published_pose = associated_pose
             print("Update!!!")
-        elif self.last_published_pose != None and utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE and self.sg_q.getSize() != 0:
-            self.sg_q.update(curr_pose=getVectorForm(associated_pose[0:3]))
+        elif self.last_published_pose != None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
             targetGraph = self.sg_q.getGraph() 
             evalPackage = EvalPackage(receipt=msg.receipt, batch=self.all_graphs, target=targetGraph) 
             self.last_published_pose = associated_pose
@@ -166,7 +188,9 @@ class FrontEnd:
         best_score = score[idx]
         if best_score > THRESHOLD:
             # loop closure
-            self.fg.add_edge(None, (int)(receipt/DELAY), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
+            # self.fg.add_edge(None, (int)(receipt/DELAY), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
+            print("I have been here before at time step (receipt = ???)")
+            # self.all_graphs.append(self.sg_q.getGraph())
             pass
         else:
             # all graphs append

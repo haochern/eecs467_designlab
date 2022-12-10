@@ -5,7 +5,7 @@ from sg_pr.msg import SemanticGraph
 from utils import *
 
 MIN_OBJS = 10
-SPATIAL_DIS = 1.5
+SPATIAL_DIS = 5
 
 class SG_queue:
     def __init__(self) -> None:
@@ -20,8 +20,8 @@ class SG_queue:
         for existing_item in self.sg_q:
             different = True
             for item in new_queue:
-                print("tags: ", item.tag, existing_item.tag)
-                print("IOU::::::" ,overlap(item, existing_item))
+                # print("tags: ", item.tag, existing_item.tag)
+                # print("IOU::::::" ,overlap(item, existing_item))
                 
                 if item.tag == existing_item.tag and overlap(item, existing_item) > 0.5:
                     
@@ -44,10 +44,11 @@ class SG_queue:
         """
         pass
 
-    def update(self, curr_pose):
+    def update(self, receipt):
         i = len(self.sg_q) - 1
         while (i >= 0):
-            if (distance(curr_pose, self.sg_q[i].associated_pose[0:3]) > SPATIAL_DIS):
+            # if (distance(curr_pose, self.sg_q[i].associated_pose[0:3]) > SPATIAL_DIS):
+            if (abs(receipt - self.sg_q[i].receipt) > SPATIAL_DIS):
                 self.sg_q.pop(i)
             i -= 1
 
