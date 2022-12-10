@@ -10,13 +10,14 @@ def overlap(bbox1, bbox2):
     bbox1R=bbox1.radius()
     bbox2R=bbox2.radius()
     d = np.linalg.norm(np.array(bbox2.global_center())-np.array(bbox1.global_center()))
+    print("box1 center ", bbox1.global_center(), "box2 center ", bbox2.global_center())
     if (d > (bbox1R+bbox2R)):
         return 0
     # formula from https://archive.lib.msu.edu/crcmath/math/math/s/s563.htm
     overlap_V= math.pi*(bbox1R+bbox2R-d)**2 * (d**2+2*d*bbox1R+2*d*bbox2R+6*bbox1R*bbox2R-3*bbox1R**2-3*bbox2R**2)/12/d
-    voluebbox1= bbox1.volume()
-    voluebbox2= bbox2.volume()
-    iou= overlap_V/(voluebbox1+voluebbox2-overlap_V)
+    volumebbox1= bbox1.volume()
+    volumebbox2= bbox2.volume()
+    iou= overlap_V/(volumebbox1+volumebbox2-overlap_V)
     return iou
 
 
@@ -34,7 +35,8 @@ def getVectorForm(point):
     return [point[0], point[1], point[2]]
 
 def translate_point(point, position):
-    camera_transform = transformation.inverse_matrix(transformation.quaternion_matrix(position))
+    print("pos = ", position)
+    camera_transform = transformation.translation_matrix(position)
     point_transform = transformation.translation_matrix(point)
     transformed_point_matrix = np.matmul(camera_transform, point_transform)
     new_point = [transformed_point_matrix[0][3], transformed_point_matrix[1][3], transformed_point_matrix[2][3]]

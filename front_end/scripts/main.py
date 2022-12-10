@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+import time
 
 import rospy
 import ros_numpy
@@ -27,7 +28,9 @@ NUM_POINT = 8000
 TRANSFORM_CAMERA = quaternion_from_euler(math.pi/2,-math.pi/2,0)
 
 UPDATE_DISTANCE = 1
-MIN_OBJC_COUNT = 5
+MIN_OBJC_COUNT = 3
+
+FG = None
 
 class FrontEnd:
     
@@ -41,6 +44,7 @@ class FrontEnd:
         self.pendingPcd = {}
         self.pendingPose = {}
 
+        FG = self.fg
 
         self.subscriber_pose = rospy.Subscriber('orb_slam2_rgbd/pose', PoseStamped, self.pose_callback)
         self.subscriber_pcd = rospy.Subscriber('points2', PointCloud2, self.pcd_callback)
@@ -51,6 +55,8 @@ class FrontEnd:
 
 
         self.last_published_pose = None
+
+        self.t0 = time.time()
 
     def pose_callback(self, msg: PoseStamped):
         self.receipt += 1
@@ -85,6 +91,7 @@ class FrontEnd:
         # print(self.timestamp)
         self.timestamp += 1
         if self.timestamp % DELAY == 0:
+            t0 = time.time()
             if len(self.pendingPose) > 0:
                 print("Pose(ID: ", self.timestamp, ") pop")  
                 pcd = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(msg, remove_nans=True)
@@ -108,9 +115,10 @@ class FrontEnd:
                 self.pendingPcd[self.timestamp] = msg
                 print("Point Cloud(ID: ", self.timestamp, ") pushed")
         
-        
+            # print("-----------Time passed: ", time.time() - t0)
 
     def bboxes_callback(self, msg: BBoxArray): 
+        t0 = time.time()
         actual_bbox = []
         print("message receipt", msg.receipt)
         # print(len(self.fg.vertexes))
@@ -135,19 +143,25 @@ class FrontEnd:
         if self.last_published_pose == None and self.sg_q.getSize() > MIN_OBJC_COUNT:
             self.all_graphs.append(self.sg_q.getGraph())
             self.last_published_pose = associated_pose
-        elif self.last_published_pose != None and utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE:
+            print("Update!!!")
+        elif self.last_published_pose != None and utils.distance(self.last_published_pose[0:3], associated_pose[0:3]) > UPDATE_DISTANCE and self.sg_q.getSize() != 0:
             self.sg_q.update(curr_pose=getVectorForm(associated_pose[0:3]))
             targetGraph = self.sg_q.getGraph() 
             evalPackage = EvalPackage(receipt=msg.receipt, batch=self.all_graphs, target=targetGraph) 
             self.last_published_pose = associated_pose
+            self.t0 = time.time()
             self.publisher_pr.publish(evalPackage)
+            print("Update!!!")
             # publish
+        # print("-------------------------------")
+        # print("Time Passed: ", time.time() - t0)
 
 
     def eval_callback(self, msg: EvalScore):
         
         score, receipt = msg.score, msg.receipt
         print("Eval Call Back..............score................", score)
+        print("-----------------Time passed : ", time.time() - self.t0)
         idx = np.argmax(score)
         best_score = score[idx]
         if best_score > THRESHOLD:

@@ -6,6 +6,9 @@ from geometry_msgs.msg import Point
 import rviz_tools as rviz_tools
 from votenet.msg import BBoxArray
 
+# from front_end.scripts.main import FG
+# from front_end.scripts.utils import *
+
 THRESHOLD = 0.9
 # THRESHOLD = 0
 
@@ -24,6 +27,8 @@ class bbox:
         for obj in data.array:
             if obj.score > THRESHOLD:
                 corners = obj.bbox_corners
+                # for i in range(len(corners)):
+                #    corners[i] = translate_point(corners[i], FG.vertexes[(int)(data.receipt/30)-1][0:3])
                 for i in [0, 4]:
                     path = [corners[i], corners[i+1], corners[i+2], corners[i+3], corners[i]]
                     self.markers.publishPath(path, 'red', WIDTH, LIFTTIME)

@@ -5,7 +5,7 @@ from sg_pr.msg import SemanticGraph
 from utils import *
 
 MIN_OBJS = 10
-SPATIAL_DIS = 5
+SPATIAL_DIS = 1.5
 
 class SG_queue:
     def __init__(self) -> None:
@@ -21,8 +21,10 @@ class SG_queue:
             different = True
             for item in new_queue:
                 print("tags: ", item.tag, existing_item.tag)
+                print("IOU::::::" ,overlap(item, existing_item))
+                
                 if item.tag == existing_item.tag and overlap(item, existing_item) > 0.5:
-                    print("IOU::::::" ,overlap(item, existing_item))
+                    
                     different = False
             if different:
                 temp.append(existing_item)
@@ -46,7 +48,7 @@ class SG_queue:
         i = len(self.sg_q) - 1
         while (i >= 0):
             if (distance(curr_pose, self.sg_q[i].associated_pose[0:3]) > SPATIAL_DIS):
-                self.sq_q.pop(i)
+                self.sg_q.pop(i)
             i -= 1
 
         pass
@@ -65,4 +67,4 @@ class SG_queue:
         return semanticGraph
 
     def getSize(self):
-        return len(self.sg)
+        return len(self.sg_q)
