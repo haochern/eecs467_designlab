@@ -5,7 +5,7 @@ from sg_pr.msg import SemanticGraph
 from utils import *
 
 MIN_OBJS = 10
-SPATIAL_DIS = 5
+SPATIAL_DIS = 3
 
 class SG_queue:
     def __init__(self) -> None:
@@ -14,7 +14,7 @@ class SG_queue:
         pass
 
     def insert(self, new_queue):
-        print("new q size: ", len(new_queue))
+        print("Objects Detected: ", len(new_queue))
         temp = new_queue.copy()
 
         for existing_item in self.sg_q:

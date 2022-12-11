@@ -21,9 +21,16 @@ from BoundingBox import *
 
 from transformation import *
 
-THRESHOLD = 0.99
+from decimal import *
+
+THRESHOLD = 0.5
 DELAY = 30
 NUM_POINT = 8000
+
+CHAIR_RECOG_THRESH = 0.9
+TABLE_RECOG_THRESH = 0.8
+DESK_RECOG_THRESH = 0.7
+SOFA_RECOG_THRESH = 0.6
 
 TRANSFORM_CAMERA = quaternion_from_euler(math.pi/2,-math.pi/2,0)
 
@@ -38,6 +45,7 @@ class FrontEnd:
         self.sg_q = SG_queue()
         self.fg = FactorGraph()
         self.all_graphs = []
+        self.graph_contruction_time = []
 
         self.timestamp = 0
         self.receipt = 0
@@ -55,6 +63,7 @@ class FrontEnd:
 
 
         self.last_published_pose = None
+        self.last_objects_seen = {}
 
         self.t0 = time.time()
 
@@ -125,9 +134,9 @@ class FrontEnd:
             #pos, ori = poped_msg.pose.position, poped_msg.pose.orientation
             curr_camera_pose = [0,0,0,0,0,0,0]
             vtx, edge = self.fg.add_adjacent_vertex(curr_camera_pose)
-            print("new vertex:", vtx)
-            print("new edge:", edge)
-            print("curr camera pose: ", curr_camera_pose)
+            # print("new vertex:", vtx)
+            # print("new edge:", edge)
+            # print("curr camera pose: ", curr_camera_pose)
 
             # publish to votenet for detection
             downSampled_pcd = random_sampling(pcd,NUM_POINT)  
@@ -142,68 +151,111 @@ class FrontEnd:
     def bboxes_callback(self, msg: BBoxArray): 
         t0 = time.time()
         actual_bbox = []
-        print("message receipt", msg.receipt)
+        print("Time Step (frame): ", msg.receipt)
         # print(len(self.fg.vertexes))
         # print((int)(msg.receipt/DELAY))
         associated_pose = self.fg.vertexes[(int)(msg.receipt/DELAY)-1]
-        print("length of msg array: ", len(msg.array))
+        # print("length of msg array: ", len(msg.array))
+        current_objects_seen = {}
         for bbox in msg.array:
-            if bbox.score < 0.9:
+            if bbox.score < get_threshold(bbox.tag):
                 continue
             corners = []
             for p in bbox.bbox_corners:
                 corners.append([p.x, p.y, p.z])
-            actual_bbox.append(BoundingBox(corners=corners, tag=bbox.tag, pose=associated_pose, receipt=msg.receipt))
-        
+            actual_bbox.append(BoundingBox(corners=corners, tag=label_transform_votenet_to_sgbr(bbox.tag), pose=associated_pose, receipt=msg.receipt))
+            current_objects_seen[label_transform_votenet_to_sgbr(bbox.tag)] = 1
+
         self.sg_q.insert(new_queue=actual_bbox)
         self.sg_q.update(receipt=msg.receipt)
 
-        print("Current SQ_Q Size: ",len(self.sg_q.getGraph().nodes))
-        print("Current All graph Size: ",len(self.all_graphs))
+        print("Current Semantic Graph Size: ", len(self.sg_q.getGraph().nodes))
+        print("Current Number of Graphs: ", len(self.all_graphs))
+        print("-----------------------------------")
         # to SG_PR
-        if self.last_published_pose != None:
-            print("Update Distance", utils.distance(self.last_published_pose[0:3], associated_pose[0:3]))
-        if self.last_published_pose == None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
-            self.all_graphs.append(self.sg_q.getGraph())
-            self.last_published_pose = associated_pose
-            print("Update!!!")
-        elif self.last_published_pose != None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
-            targetGraph = self.sg_q.getGraph() 
-            evalPackage = EvalPackage(receipt=msg.receipt, batch=self.all_graphs, target=targetGraph) 
-            self.last_published_pose = associated_pose
-            self.t0 = time.time()
-            self.publisher_pr.publish(evalPackage)
-            print("Update!!!")
+
+        shared_items = {k: current_objects_seen[k] for k in current_objects_seen if k in self.last_objects_seen and current_objects_seen[k] == self.last_objects_seen[k]}
+        # print(len(shared_items))
+
+        if len(current_objects_seen) == len(self.last_objects_seen) and len(shared_items) == len(current_objects_seen):
+            if self.last_published_pose == None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
+                self.all_graphs.append(self.sg_q.getGraph())
+                self.graph_contruction_time.append(msg.receipt)
+                self.last_published_pose = associated_pose
+                print("Update!!!")
+            elif self.last_published_pose != None and self.sg_q.getSize() >= MIN_OBJC_COUNT:
+                targetGraph = self.sg_q.getGraph() 
+                evalPackage = EvalPackage(receipt=msg.receipt, batch=self.all_graphs, target=targetGraph) 
+                self.last_published_pose = associated_pose
+                self.t0 = time.time()
+                self.publisher_pr.publish(evalPackage)
+                print("Update!!!")
+        
+        self.last_objects_seen = current_objects_seen
             # publish
         # print("-------------------------------")
         # print("Time Passed: ", time.time() - t0)
 
 
     def eval_callback(self, msg: EvalScore):
-        
+        getcontext().prec = 3
         score, receipt = msg.score, msg.receipt
-        print("Eval Call Back..............score................", score)
-        print("-----------------Time passed : ", time.time() - self.t0)
+        print("Eval Scores: ", [round(x,4) for x in score])
+        print("Time passed : ", time.time() - self.t0)
+        print("-----------------------------------")
         idx = np.argmax(score)
         best_score = score[idx]
         if best_score > THRESHOLD:
             # loop closure
             # self.fg.add_edge(None, (int)(receipt/DELAY), pair_to_edge(None, self.fg.vertexes[(int)(receipt/30)]))
-            print("I have been here before at time step (receipt = ???)")
+            
+            print("I have been here before at time step (Time Step = ", self.graph_contruction_time[idx] ,")")
+            print("-----------------------------------")           
             # self.all_graphs.append(self.sg_q.getGraph())
             pass
         else:
             # all graphs append
+            print("New place detected")
+            print("-----------------------------------")
             self.all_graphs.append(self.sg_q.getGraph())
+            self.graph_contruction_time.append(msg.receipt)
             pass
 
+    
+
 def main():
+
     rospy.init_node("front-end")
 
     f = FrontEnd()
 
     rospy.spin()
 
+def label_transform_votenet_to_sgbr(votenet_label):
+    if votenet_label == 0:
+        return 0 # bed -> side walk
+    elif votenet_label == 1:
+        return 1 # table -> pole
+    elif votenet_label == 2:
+        return 2 # sofa -> vegetation
+    elif votenet_label == 3:
+        return 3 # chair -> car
+    elif votenet_label == 5:
+        return 4 # desk -> building
+    else:
+        return votenet_label
+
+def get_threshold(votenet_label):
+    if votenet_label == 1:
+        return TABLE_RECOG_THRESH # table
+    elif votenet_label == 2:
+        return SOFA_RECOG_THRESH # sofa
+    elif votenet_label == 3:
+        return CHAIR_RECOG_THRESH # chair
+    elif votenet_label == 5:
+        return DESK_RECOG_THRESH # desk
+    else:
+        return 0.5
 
 if __name__ == '__main__':
     main()

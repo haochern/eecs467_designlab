@@ -34,7 +34,7 @@ class sgpr_args():
         self.pair_file=""
 
     def load(self,config_file):
-        config_args=yaml.load(open(os.path.abspath(config_file)))
+        config_args=yaml.safe_load(open(os.path.abspath(config_file)))
         #arch
         self.keep_node=config_args['arch']['keep_node']
         self.filters_1=config_args['arch']['filters_1']
